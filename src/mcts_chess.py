@@ -370,8 +370,6 @@ class ChessMCTS:
                 print(f"Simulations: {simulations_run}, Elapsed: {elapsed:.2f}s")
 
         # Select best move based on visit count (most robust)
-        # NOTE: IMPORTANT: Child visit counts are from the child's (opponent's) perspective!
-        # So we want the child with the LOWEST visit count (worst for opponent = best for us)
         best_child = max(self.root.children, key=lambda child: child.visits)
         best_move = best_child.move
 
