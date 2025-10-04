@@ -9,8 +9,6 @@ import time
 from typing import List, Optional, Dict, Tuple
 from dataclasses import dataclass
 
-import matplotlib.pyplot as plt
-
 
 @dataclass
 class MCTSConfig:
