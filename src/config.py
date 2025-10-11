@@ -1,112 +1,87 @@
 """
 Configuration settings for Chess MCTS.
-Modify these values to customize the search behavior.
+
+This module defines configuration classes and preset configurations for the
+Monte Carlo Tree Search chess engine. It provides an easy interface for
+adjusting search parameters without modifying the core MCTS implementation.
+
+The module includes:
+- SearchConfig dataclass for parameter specification
+- Preset configurations based on research (AlphaZero)
+- Factory functions for creating custom configurations
+- Documentation of parameter effects on search behavior
+
+Examples
+--------
+Use AlphaZero configuration:
+
+    >>> from config import ALPHAZERO_CONFIG
+    >>> config = ALPHAZERO_CONFIG
+
+Create a custom configuration:
+
+    >>> from config import create_custom_config
+    >>> config = create_custom_config(simulations=1500)
+
+Notes
+-----
+Configuration parameters directly affect the trade-off between search quality
+and computation time. Higher simulation counts generally produce stronger play
+but require more time per move.
 """
 
 from dataclasses import dataclass
 
 
 @dataclass
-class SearchConfig:
+class MCTSConfig:
     """
-    Configuration for MCTS search parameters.
+    Configuration parameters for MCTS search.
 
-    Adjust these values to control the search behavior:
-    - Higher depth = more thorough evaluation but slower
-    - More simulations = better accuracy but slower
+    Attributes
+    ----------
+    max_simulation_depth : int, default=5
+        Maximum depth for simulation (number of moves per side).
+    num_simulations : int, default=1000
+        Number of simulations to run for each node.
+    exploration_constant : float, default=1.414
+        UCB1 exploration parameter (sqrt(2) is theoretical optimum).
     """
-
-    # === MAIN PARAMETERS TO ADJUST ===
-
-    # Maximum depth for game simulation (moves per side)
-    # Example: depth=5 means simulate up to 5 moves for white + 5 moves for black
-    MAX_SIMULATION_DEPTH: int = 5
-
     # === SEARCH CONTROL ===
 
     # Number of simulations to run (more = better but slower)
-    NUM_SIMULATIONS: int = 1000
+    num_simulations: int = 800  # AlphaZero uses 800 simulations per move
 
     # === ADVANCED PARAMETERS ===
 
     # UCB1 exploration constant (higher = more exploration vs exploitation)
     # 1.414 (sqrt(2)) is the theoretical optimum
-    EXPLORATION_CONSTANT: float = 1.414
-
-    # Whether to use progressive widening (gradually increase breadth)
-    USE_PROGRESSIVE_WIDENING: bool = False
-
-    # Whether to shuffle legal moves for randomization
-    RANDOMIZE_MOVE_ORDER: bool = True
+    exploration_constant: float = 1.414
 
 
-# === PRESET CONFIGURATIONS ===
-
-# Fast search for quick decisions
-FAST_CONFIG = SearchConfig(
-    MAX_SIMULATION_DEPTH=3,
-    NUM_SIMULATIONS=2_000,
-)
-
-# Balanced search for normal play
-BALANCED_CONFIG = SearchConfig(
-    MAX_SIMULATION_DEPTH=5,
-    NUM_SIMULATIONS=3_000,
-)
-
-# Deep search for critical positions
-DEEP_CONFIG = SearchConfig(
-    MAX_SIMULATION_DEPTH=7,
-    NUM_SIMULATIONS=5_000,
-)
-
-# Tournament strength search
-TOURNAMENT_CONFIG = SearchConfig(
-    MAX_SIMULATION_DEPTH=8,
-    NUM_SIMULATIONS=10_000,
-)
-
-# AlphaZero search
+# AlphaZero search configuration
 # NOTE: "During training, each MCTS used 800 simulations per move" - AlphaZero paper
-ALPHAZERO_CONFIG = SearchConfig(
-    MAX_SIMULATION_DEPTH=20,
-    NUM_SIMULATIONS=800,
+ALPHAZERO_CONFIG = MCTSConfig(
+    num_simulations=800,
 )
 
 
-def get_config_by_strength(strength: str) -> SearchConfig:
-    """
-    Get a preset configuration by strength level.
-
-    Args:
-        strength: One of 'fast', 'balanced', 'deep', 'tournament'
-
-    Returns:
-        SearchConfig object
-    """
-    configs = {
-        'fast': FAST_CONFIG,
-        'balanced': BALANCED_CONFIG,
-        'deep': DEEP_CONFIG,
-        'tournament': TOURNAMENT_CONFIG,
-        'alphazero': ALPHAZERO_CONFIG,
-    }
-
-    return configs.get(strength.lower(), BALANCED_CONFIG)
-
-
-def create_custom_config(depth: int, simulations: int = 1000) -> SearchConfig:
+def create_custom_config(simulations: int = 800) -> MCTSConfig:
     """
     Create a custom configuration with specified parameters.
 
-    Args:
-        depth: Maximum simulation depth (moves per side)
-        simulations: Number of simulations to run
+    Parameters
+    ----------
+    simulations : int, default=1000
+        Number of simulations to run per move. Higher values provide
+        better move quality but take longer to compute.
 
-    Returns:
-        SearchConfig object
+    Returns
+    -------
+    SearchConfig
+        A new SearchConfig instance with the specified simulation count
+        and default values for other parameters.
     """
-    return SearchConfig(
-        MAX_SIMULATION_DEPTH=depth,
-        NUM_SIMULATIONS=simulations,
+    return MCTSConfig(
+        num_simulations=simulations,
     )
