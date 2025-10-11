@@ -2,34 +2,14 @@
 Monte Carlo Tree Search implementation for chess with configurable depth and breadth parameters.
 """
 
-import chess
-import random
 import math
+import random
 import time
 from typing import List, Optional, Dict, Tuple
-from dataclasses import dataclass
 
+import chess
 
-@dataclass
-class MCTSConfig:
-    """
-    Configuration parameters for MCTS search.
-
-    Attributes
-    ----------
-    max_simulation_depth : int, default=5
-        Maximum depth for simulation (number of moves per side).
-    num_simulations : int, default=1000
-        Number of simulations to run for each node.
-    exploration_constant : float, default=1.414
-        UCB1 exploration parameter (sqrt(2) is theoretical optimum).
-    """
-    # Maximum depth for simulation (number of moves per side)
-    max_simulation_depth: int = 5
-
-    # Number of simulations to run for each node
-    num_simulations: int = 1000    # UCB1 exploration parameter
-    exploration_constant: float = 1.414  # sqrt(2)
+from config import MCTSConfig
 
 
 class MCTSNode:
@@ -103,7 +83,7 @@ class MCTSNode:
 
     def ucb1_value(self, exploration_constant: float) -> float:
         """
-        Calculate UCB1 value for this node.
+        Calculate UCB1 (Upper Confidence Bound 1) value for this node.
 
         The UCB1 formula balances exploitation (win rate) with exploration
         (uncertainty based on visit count).
@@ -153,17 +133,12 @@ class MCTSNode:
         """
         return max(self.children, key=lambda child: child.ucb1_value(exploration_constant))
 
-    def expand(self, max_depth: int) -> 'MCTSNode':
+    def expand(self) -> 'MCTSNode':
         """
         Expand this node by adding a new child.
 
         Creates a new child node for the next unexplored legal move.
         All legal moves are considered, but expansion stops at max_depth.
-
-        Parameters
-        ----------
-        max_depth : int
-            Maximum depth for expansion (moves from root).
 
         Returns
         -------
@@ -172,10 +147,6 @@ class MCTSNode:
             or max depth reached.
         """
         if not self.unexplored_moves:
-            return self
-
-        # Don't expand beyond max depth
-        if self.depth >= max_depth:
             return self
 
         # Take the next unexplored move (all legal moves are considered)
@@ -307,7 +278,7 @@ class ChessMCTS:
         config : MCTSConfig, optional
             Configuration parameters. If None, default config is used.
         """
-        self.config = config or MCTSConfig()
+        self.config = config
         self.root: Optional[MCTSNode] = None
 
     def search(self, board: chess.Board) -> Tuple[chess.Move, Dict]:
@@ -339,7 +310,6 @@ class ChessMCTS:
         simulations_run = 0
 
         print("Starting MCTS search with config:")
-        print(f"  Max simulation depth: {self.config.max_simulation_depth} moves per side")
         print("  Considering ALL legal moves")
         print(f"  Target simulations: {self.config.num_simulations}")
         print()
@@ -352,7 +322,7 @@ class ChessMCTS:
 
             # Expansion: add a new child if possible (respect max depth)
             # node returned here is the child node
-            child_node = node.expand(self.config.max_simulation_depth)
+            child_node = node.expand()
 
             # Simulation: run random playout
             result = child_node.simulate(board_turn=board.turn, child_board=child_node.board)
