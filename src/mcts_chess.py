@@ -320,7 +320,7 @@ class ChessMCTS:
             # NOTE: at the first move, no children exist yet (Expansion will handle this)
             node = self._select(self.root)
 
-            # Expansion: add a new child if possible (respect max depth)
+            # Expansion: add a new child if possible
             # node returned here is the child node
             child_node = node.expand()
 
@@ -376,8 +376,8 @@ class ChessMCTS:
         MCTSNode
             A leaf node (either terminal or not fully expanded).
         """
-        # NOTE: this will go down until a leaf node is found. After that, Expansion will handle adding a new child.
-        while not node.is_terminal() and node.is_fully_expanded():
+        # NOTE: this will go down until a leaf node (end game) is found. After that, Expansion will handle adding a new child.
+        while (not node.is_terminal()) and node.is_fully_expanded():
             node = node.select_best_child(self.config.exploration_constant)
         return node
 

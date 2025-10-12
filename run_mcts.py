@@ -30,8 +30,7 @@ from typing import List, Tuple, Optional
 
 import chess
 
-# Add src directory to path so we can import our modules
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+# sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 
 from mcts_chess import ChessMCTS
@@ -305,7 +304,7 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
         print()
 
         if is_player_turn:
-            # Player's turn - handle human input vs MCTS
+            # player's turn - handle human input vs MCTS
             if is_human_player:
                 # Human player enters moves
                 move = get_human_move(board, player_color_name)
