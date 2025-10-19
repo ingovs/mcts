@@ -34,8 +34,8 @@ import chess
 # sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 
-from mcts_chess import ChessMCTS
-from config import create_custom_config
+from src.mcts_chess import ChessMCTS
+from src.config import create_custom_config
 
 # ===============================================
 # CONFIGURATION SECTION - EDIT THESE VALUES
@@ -300,10 +300,7 @@ def interactive_play(
     # Win rate tracking
     win_rates_history = []  # Store (white_win_rate, black_win_rate) for each round
 
-    print("Game starting...")
-    if not is_human_player:
-        print("Press Enter after each move to continue")
-    print()
+    print("Game starting")
 
     # Game begins
     while not board.is_game_over():
@@ -326,7 +323,7 @@ def interactive_play(
                 board.push(move)
             else:
                 # MCTS player
-                print(f"Your turn ({player_color_name}) - MCTS thinking...")
+                print(f"Your turn ({player_color_name}) - MCTS thinking")
                 move, stats = player_mcts.search(board)
 
                 # Use the selected move's win rate from MCTS stats
@@ -433,17 +430,6 @@ def interactive_play(
 
 
 if __name__ == "__main__":
-    """
-    Main execution block for the Chess MCTS interactive runner.
-
-    This block runs when the script is executed directly (not imported).
-    It presents a menu of game modes and starts the selected game type.
-
-    Available game modes:
-    1. Human vs Computer - Human enters moves against MCTS engine
-    2. MCTS vs Random - MCTS engine plays against random moves
-    3. MCTS vs MCTS - Two MCTS engines play against each other
-    """
     print("Chess Monte Carlo Tree Search")
     print("=" * 40)
     print()
