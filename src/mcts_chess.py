@@ -45,11 +45,16 @@ class MCTSNode:
         Legal moves that haven't been expanded yet.
     """
 
-    def __init__(self, board: chess.Board, move: Optional[chess.Move] = None, parent: Optional['MCTSNode'] = None):
+    def __init__(
+        self,
+        board: chess.Board,
+        move: Optional[chess.Move] = None,
+        parent: Optional["MCTSNode"] = None,
+    ):
         self.board = board.copy()
         self.move = move  # The move that led to this position
         self.parent = parent
-        self.children: List['MCTSNode'] = []
+        self.children: List["MCTSNode"] = []
         self.visits = 0
         self.wins = 0.0
         self.legal_moves = list(board.legal_moves)
@@ -103,15 +108,17 @@ class MCTSNode:
         # while AlphaZero uses a neural net prior so the tree tends to expand selectively into the
         # most promising variations
         if self.visits == 0:
-            return float('inf')
+            return float("inf")
 
         exploitation = self.wins / self.visits
 
         # exploration term penalizes frequently visited nodes in order to favor less explored ones
-        exploration = exploration_constant * math.sqrt(math.log(self.parent.visits) / self.visits)
+        exploration = exploration_constant * math.sqrt(
+            math.log(self.parent.visits) / self.visits
+        )
         return exploitation + exploration
 
-    def select_best_child(self, exploration_constant: float) -> 'MCTSNode':
+    def select_best_child(self, exploration_constant: float) -> "MCTSNode":
         """
         Select the child with the highest UCB1 value (Upper Confidence Bound 1 applied to trees).
 
@@ -131,9 +138,11 @@ class MCTSNode:
         with high average win ratio. The second component corresponds to exploration; it is high for
         moves with few simulations.
         """
-        return max(self.children, key=lambda child: child.ucb1_value(exploration_constant))
+        return max(
+            self.children, key=lambda child: child.ucb1_value(exploration_constant)
+        )
 
-    def expand(self) -> 'MCTSNode':
+    def expand(self) -> "MCTSNode":
         """
         Expand this node by adding a new child.
 
@@ -202,7 +211,9 @@ class MCTSNode:
         # Evaluate the final position
         return self._evaluate_position(board_turn, simulation_board)
 
-    def _evaluate_position(self, board_turn: bool, simulation_board: chess.Board) -> float:
+    def _evaluate_position(
+        self, board_turn: bool, simulation_board: chess.Board
+    ) -> float:
         """
         Evaluate the final position and return a score from current player's perspective.
 
@@ -224,7 +235,10 @@ class MCTSNode:
         if simulation_board.is_checkmate():
             # If it's checkmate, the player to move (in the simulated game) has lost
             return 0.0 if simulation_board.turn == board_turn else 1.0
-        elif simulation_board.is_stalemate() or simulation_board.is_insufficient_material():
+        elif (
+            simulation_board.is_stalemate()
+            or simulation_board.is_insufficient_material()
+        ):
             return 0.5  # Draw
         else:
             return 0.5  # Neutral for unfinished games
@@ -315,7 +329,6 @@ class ChessMCTS:
         print()
 
         while simulations_run < self.config.num_simulations:
-
             # Selection: traverse tree using UCB1
             # NOTE: at the first move, no children exist yet (Expansion will handle this)
             node = self._select(self.root)
@@ -325,7 +338,9 @@ class ChessMCTS:
             child_node = node.expand()
 
             # Simulation: run random playout
-            result = child_node.simulate(board_turn=board.turn, child_board=child_node.board)
+            result = child_node.simulate(
+                board_turn=board.turn, child_board=child_node.board
+            )
 
             # Backpropagation: update statistics
             child_node.backpropagate(result)
@@ -347,14 +362,18 @@ class ChessMCTS:
         # Gather statistics
         total_time = time.time() - start_time
         stats = {
-            'simulations_run': simulations_run,
-            'total_time': total_time,
-            'simulations_per_second': simulations_run / total_time if total_time > 0 else 0,
-            'tree_size': self._count_nodes(self.root),
-            'root_visits': self.root.visits,
-            'best_move_visits': max((child.visits for child in self.root.children), default=0),
-            'children_count': len(self.root.children),
-            'selected_move_win_rate': selected_move_win_rate
+            "simulations_run": simulations_run,
+            "total_time": total_time,
+            "simulations_per_second": simulations_run / total_time
+            if total_time > 0
+            else 0,
+            "tree_size": self._count_nodes(self.root),
+            "root_visits": self.root.visits,
+            "best_move_visits": max(
+                (child.visits for child in self.root.children), default=0
+            ),
+            "children_count": len(self.root.children),
+            "selected_move_win_rate": selected_move_win_rate,
         }
 
         return best_move, stats
@@ -402,37 +421,6 @@ class ChessMCTS:
             count += self._count_nodes(child)
         return count
 
-    def get_principal_variation(self, depth: int = 5) -> List[chess.Move]:
-        """
-        Get the principal variation (most visited path) from the root.
-
-        Follows the path of most visited children to construct the
-        principal variation line.
-
-        Parameters
-        ----------
-        depth : int, default=5
-            Maximum depth of variation to return.
-
-        Returns
-        -------
-        List[chess.Move]
-            Sequence of moves representing the principal variation.
-        """
-        pv = []
-        node = self.root
-
-        for _ in range(depth):
-            if not node.children:
-                break
-
-            # Select most visited child
-            best_child = max(node.children, key=lambda child: child.visits)
-            pv.append(best_child.move)
-            node = best_child
-
-        return pv
-
     def print_move_analysis(self, top_moves: int = 5):
         """
         Print analysis of top moves considered.
@@ -454,11 +442,15 @@ class ChessMCTS:
         print("-" * 50)
 
         # Sort children by visit count
-        sorted_children = sorted(self.root.children, key=lambda child: child.visits, reverse=True)
+        sorted_children = sorted(
+            self.root.children, key=lambda child: child.visits, reverse=True
+        )
 
         for i, child in enumerate(sorted_children[:top_moves]):
             win_rate = child.wins / child.visits if child.visits > 0 else 0
             ucb1 = child.ucb1_value(self.config.exploration_constant)
-            ucb1_str = f"{ucb1:.3f}" if ucb1 != float('inf') else "inf"
+            ucb1_str = f"{ucb1:.3f}" if ucb1 != float("inf") else "inf"
 
-            print(f"{str(child.move):<15} {child.visits:>8} {win_rate:>10.3f} {ucb1_str:>8}")
+            print(
+                f"{str(child.move):<15} {child.visits:>8} {win_rate:>10.3f} {ucb1_str:>8}"
+            )

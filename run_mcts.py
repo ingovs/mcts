@@ -9,8 +9,8 @@ options for testing different MCTS parameters.
 The module supports:
 - Interactive play against random opponents
 - Interactive play between MCTS engines
-- Configurable search parameters
-- Real-time win probability tracking
+- Configurable number of simulations
+- Real-time estimated win probability tracking after each move
 - Move analysis and principal variation display
 - Visual win rate evolution charts
 
@@ -23,9 +23,10 @@ Modify the CONFIGURATION SECTION below to customize:
 The default configuration uses 800 simulations per move (AlphaZero standard)
 with detailed analysis enabled.
 """
-import os
+
+# import os
 import random
-import sys
+# import sys
 from typing import List, Tuple, Optional
 
 import chess
@@ -104,7 +105,7 @@ def get_human_move(board: chess.Board, player_color_name: str) -> Optional[chess
                 move_strs = [str(move) for move in legal_moves]
                 # Print in rows of 8
                 for i in range(0, len(move_strs), 8):
-                    print("  " + " ".join(move_strs[i:i+8]))
+                    print("  " + " ".join(move_strs[i : i + 8]))
                 continue
 
             # Try to parse the move
@@ -113,7 +114,11 @@ def get_human_move(board: chess.Board, player_color_name: str) -> Optional[chess
             # First try standard algebraic notation
             try:
                 move = board.parse_san(move_input)
-            except (chess.InvalidMoveError, chess.IllegalMoveError, chess.AmbiguousMoveError):
+            except (
+                chess.InvalidMoveError,
+                chess.IllegalMoveError,
+                chess.AmbiguousMoveError,
+            ):
                 pass
 
             # If that failed, try UCI notation
@@ -126,7 +131,9 @@ def get_human_move(board: chess.Board, player_color_name: str) -> Optional[chess
                     pass
 
             if move is None:
-                print(f"Invalid move: '{move_input}'. Type 'help' for format examples or 'moves' for legal moves.")
+                print(
+                    f"Invalid move: '{move_input}'. Type 'help' for format examples or 'moves' for legal moves."
+                )
                 continue
 
             # Valid move found
@@ -186,14 +193,18 @@ def display_win_rate_chart(win_rates_history: List[Tuple[float, float]]) -> None
             else:
                 chart += " "
 
-        print(f"{round_num:5d} | {white_rate*100:10.1f} | {black_rate*100:10.1f} | {chart}")
+        print(
+            f"{round_num:5d} | {white_rate * 100:10.1f} | {black_rate * 100:10.1f} | {chart}"
+        )
 
     print("-" * 60)
     print("W = White advantage, B = Black advantage, Space = Draw tendency")
     print("=" * 60)
 
 
-def interactive_play(player_color: str = "white", opponent: str = "random", player_type: str = "mcts") -> None:
+def interactive_play(
+    player_color: str = "white", opponent: str = "random", player_type: str = "mcts"
+) -> None:
     """
     Play mode with configurable player and opponent types.
 
@@ -254,7 +265,9 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
         player_color_name = "Black"
 
     print(f"Player: {player_color_name} - {player_name}")
-    print(f"Opponent: {'Black' if player_color == chess.WHITE else 'White'} - {opponent_name}")
+    print(
+        f"Opponent: {'Black' if player_color == chess.WHITE else 'White'} - {opponent_name}"
+    )
 
     if is_human_player:
         print()
@@ -295,11 +308,11 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
     # Game begins
     while not board.is_game_over():
         current_player = "White" if board.turn else "Black"
-        is_player_turn = (board.turn == player_color)
+        is_player_turn = board.turn == player_color
 
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"MOVE {move_count + 1} - {current_player.upper()} TO MOVE")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
         print(board)
         print()
 
@@ -317,8 +330,8 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
                 move, stats = player_mcts.search(board)
 
                 # Use the selected move's win rate from MCTS stats
-                if 'selected_move_win_rate' in stats:
-                    current_player_win_rate = stats['selected_move_win_rate']
+                if "selected_move_win_rate" in stats:
+                    current_player_win_rate = stats["selected_move_win_rate"]
                     # Convert to white/black perspective
                     if board.turn:  # White to move
                         white_win_rate = current_player_win_rate
@@ -328,10 +341,14 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
                         white_win_rate = 1.0 - current_player_win_rate
 
                     win_rates_history.append((white_win_rate, black_win_rate))
-                    print(f"Move win probability: White {white_win_rate*100:.1f}%, Black {black_win_rate*100:.1f}%")
+                    print(
+                        f"Move win probability: White {white_win_rate * 100:.1f}%, Black {black_win_rate * 100:.1f}%"
+                    )
 
                 print(f"You (MCTS) play: {move}")
-                print(f"Search stats: {stats['simulations_run']} sims in {stats['total_time']:.2f}s")
+                print(
+                    f"Search stats: {stats['simulations_run']} sims in {stats['total_time']:.2f}s"
+                )
 
                 if SHOW_DETAILED_ANALYSIS:
                     player_mcts.print_move_analysis(3)
@@ -351,8 +368,8 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
                 move, stats = opponent_mcts.search(board)
 
                 # Use the selected move's win rate from MCTS stats
-                if 'selected_move_win_rate' in stats:
-                    current_player_win_rate = stats['selected_move_win_rate']
+                if "selected_move_win_rate" in stats:
+                    current_player_win_rate = stats["selected_move_win_rate"]
                     # Convert to white/black perspective
                     if board.turn == chess.WHITE:  # White to move
                         white_win_rate = current_player_win_rate
@@ -362,7 +379,9 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
                         white_win_rate = 1.0 - current_player_win_rate
 
                     win_rates_history.append((white_win_rate, black_win_rate))
-                    print(f"Move win probability: White {white_win_rate*100:.1f}%, Black {black_win_rate*100:.1f}%")
+                    print(
+                        f"Move win probability: White {white_win_rate * 100:.1f}%, Black {black_win_rate * 100:.1f}%"
+                    )
 
         move_count += 1
 
@@ -374,9 +393,9 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
         # input("\nPress Enter to continue...")
 
     # Game over
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("GAME OVER")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print("Final position:")
     print(board)
     print()
@@ -400,7 +419,7 @@ def interactive_play(player_color: str = "white", opponent: str = "random", play
                 print("Reason: Checkmate")
 
             # Determine if player won
-            player_won = (outcome.winner == player_color)
+            player_won = outcome.winner == player_color
             if player_won:
                 print("\n🎉 You (MCTS) won! 🎉")
             else:
@@ -442,14 +461,18 @@ if __name__ == "__main__":
         print("Human vs Computer mode selected")
         color_choice = input("Play as (w)hite or (b)lack? [w]: ").strip().lower()
         player_color = "black" if color_choice in ["b", "black"] else "white"
-        interactive_play(player_type="human", player_color=player_color, opponent="mcts")
+        interactive_play(
+            player_type="human", player_color=player_color, opponent="mcts"
+        )
 
     elif choice == "2":
         # MCTS vs Random mode
         print("MCTS vs Random mode selected")
         color_choice = input("MCTS plays as (w)hite or (b)lack? [w]: ").strip().lower()
         player_color = "black" if color_choice in ["b", "black"] else "white"
-        interactive_play(player_type="mcts", player_color=player_color, opponent="random")
+        interactive_play(
+            player_type="mcts", player_color=player_color, opponent="random"
+        )
 
     elif choice == "3":
         # MCTS vs MCTS mode
