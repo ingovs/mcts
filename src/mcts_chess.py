@@ -318,6 +318,8 @@ class ChessMCTS:
             - 'root_visits': Number of visits to root node
             - 'best_move_visits': Visits to the selected move
             - 'children_count': Number of children expanded from root
+            - 'selected_move_win_rate': Win rate of the selected move
+            - 'tree_dict': Dictionary representation of the entire search tree
         """
         self.root = MCTSNode(board)
         start_time = time.time()
@@ -359,6 +361,9 @@ class ChessMCTS:
         # Calculate the win rate for the selected move
         selected_move_win_rate = best_child.wins / best_child.visits
 
+        # Construct tree dictionary representation
+        tree_dict = self._tree_to_dict(self.root)
+
         # Gather statistics
         total_time = time.time() - start_time
         stats = {
@@ -374,6 +379,7 @@ class ChessMCTS:
             ),
             "children_count": len(self.root.children),
             "selected_move_win_rate": selected_move_win_rate,
+            "tree_dict": tree_dict,
         }
 
         return best_move, stats
@@ -395,7 +401,9 @@ class ChessMCTS:
         MCTSNode
             A leaf node (either terminal or not fully expanded).
         """
-        # NOTE: this will go down until a leaf node (end game) is found. After that, Expansion will handle adding a new child.
+        # NOTE: this will go down until a leaf node (end game) is found
+        # (it enters the "while" loop only after all legal moves from that node are visited)
+        # After that, Expansion will handle adding a new child.
         while (not node.is_terminal()) and node.is_fully_expanded():
             node = node.select_best_child(self.config.exploration_constant)
         return node
@@ -420,6 +428,42 @@ class ChessMCTS:
         for child in node.children:
             count += self._count_nodes(child)
         return count
+
+    def _tree_to_dict(self, node: MCTSNode) -> Dict:
+        """
+        Convert the MCTS tree to a dictionary representation.
+
+        Recursively converts the tree structure starting from the given node
+        into a nested dictionary format for easier analysis and visualization.
+
+        Parameters
+        ----------
+        node : MCTSNode
+            The root node of the subtree to convert.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the tree with keys:
+            - 'move': The move that led to this position (None for root)
+            - 'visits': Number of times this node was visited
+            - 'wins': Total win score for this node
+            - 'win_rate': Win rate (wins/visits) for this node
+            - 'children': List of child dictionaries with same structure
+        """
+        # Convert children recursively
+        children = [self._tree_to_dict(child) for child in node.children]
+
+        # Calculate win rate
+        win_rate = node.wins / node.visits if node.visits > 0 else 0.0
+
+        return {
+            "move": str(node.move) if node.move else None,
+            "visits": node.visits,
+            "wins": node.wins,
+            "win_rate": win_rate,
+            "children": children,
+        }
 
     def print_move_analysis(self, top_moves: int = 5):
         """
