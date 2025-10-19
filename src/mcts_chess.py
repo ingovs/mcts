@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Tuple
 
 import chess
 
-from config import MCTSConfig
+from .config import MCTSConfig
 
 
 class MCTSNode:
